@@ -163,7 +163,7 @@ $ docker inspect tomcat-1
 
 
 
-创建并运行容器 (容器一旦创建，端口、名字、后台运行模式 都不能修改，只能删除重建)
+**创建并运行容器** (容器一旦创建，端口、名字、后台运行模式 都不能修改，只能删除重建)
 
 1. 容器名是唯一的，不能重复。
 2. 原本容器有的参数 不行覆盖就可以不用配置，容器会使用镜像默认的。
@@ -264,4 +264,70 @@ Compose 会**自动创建一个专属网桥** (自定义 bridge 类型)名字一
 
 ✅ **直接用服务名（yaml 里的名字）访问，不用 IP**
 
+### Docker volume 命令
+
+创建 volume
+
+```shell
+# docker volume create 数据卷名称
+$ docker volume create tomcat-volume-1
+```
+
+查看 volume
+
+```shell
+$ docker volume ls
+
+# 查看 dangling(未被容器引用的)匿名卷 即：悬空卷
+$ docker volume ls -f dangling=true
+
+# 查看数据卷详细信息
+# docker volume inspect 数据卷名称
+
+$ docker volume inspect tomcat-volume-1
+```
+
+删除数据卷
+
+```shell
+# docker volume rm 数据卷名称
+$ docker volume rm tomcat-volume-1
+
+# 只删除 dangling 卷 (悬空卷)
+$ docker volume prune
+
+# or:
+
+$ docker volume prune -f
+```
+
+应用数据卷
+
+```shell
+# 1. 当你映射数据卷时，如果数据卷不存在，Docker 会帮你自动创建。(会将容器内部自带的文件存储在默认的存放路径中)
+# docker run -v 数据卷名称:容器内部的路径 镜像ID
+
+$ docker run --name tomcat-1 -p 8081:8080 -d -v tomcat-volume-1:/usr/local/tomcat/webapps/ROOT tomcat
+
+# 2. 直接指定一个路径作为数据卷的存放位置。(路径里边的文件内容需要自己创建) (常用)
+# docker run -v 路径:容器内部的路径 镜像ID
+
+$ docker run -d --name tomcat-2 -p 8082:8080 -v /Users/sky/Desktop/study_github/study_docker/volume_demo/demo2:/usr/local/tomcat/webapps/ROOT tomcat
+```
+
+
+
 ## 自定义镜像
+
+
+
+
+
+
+
+
+
+
+
+
+
