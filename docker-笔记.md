@@ -211,8 +211,57 @@ $ docker run -d --name tomcat-2 -p 8082:8080 --network nginx-tomcat-net-1 tomcat
 $ docker run -d --name tomcat-2 -p 8082:8080 -v /Users/sky/Desktop/study_github/study_docker/volume_demo/demo1:/usr/local/tomcat/webapps/ROOT tomcat
 ```
 
+### Docker 网络命令
 
+查看网络
 
+```shell
+$ docker network ls
+```
 
+创建网络
+
+```shell
+# docker network create 网络名字
+# 创建 docker 内部网络，不创建该网络，docker 内部的服务之间无法互相访问。
+
+$ docker network create nginx-tomcat-net-2
+```
+
+删除网络
+
+```shell
+# docker network rm 网络名字
+$ docker network rm nginx-tomcat-net-2
+
+# 删除 所有 没有被容器使用的 自定义网络
+$ docker network prune
+```
+
+**三个默认网络**
+
+`bridge`: 默认网桥 (docker0)，普通容器默认都连它。
+
+`host`: 直接用宿主机网络栈。
+
+`none`: 无网络，只有回环口。
+
+| 网络   | 核心特点           | 端口映射 | 隔离性           |
+| ------ | ------------------ | -------- | ---------------- |
+| bridge | 独立 IP，容器互通  | 需要 -p  | 中等（推荐默认） |
+| host   | 共用宿主机 IP 网卡 | 不需要   | 无隔离           |
+| none   | 完全断网           | 无意义   | 最强隔离         |
+
+同一个 docker-compose.yml 里的所有容器，默认会自动创建一个专属网络，互相之间可以直接用 服务名/容器名 就能访问，完全不用写 IP。
+
+Compose 会**自动创建一个专属网桥** (自定义 bridge 类型)名字一般是: `项目名_default`
+
+同一个 `docker-compose` 里的容器：
+
+✅ 使用 **自动创建的自定义 bridge 网络**
+
+✅ **可以互相访问**
+
+✅ **直接用服务名（yaml 里的名字）访问，不用 IP**
 
 ## 自定义镜像
