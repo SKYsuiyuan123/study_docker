@@ -148,7 +148,68 @@ $ docker logs tomcat-1
 $ docker logs --tail=5 tomcat-1
 ```
 
+查看容器 IP 地址
 
+```shell
+# docker inspect 容器名称/容器ID
+# 在返回数据里 查找 NetworkSettings.IPAddress
+
+$ docker inspect tomcat-1
+```
+
+### 创建容器
+
+每一个容器，它都有自己的文件系统 rootfs
+
+
+
+创建并运行容器 (容器一旦创建，端口、名字、后台运行模式 都不能修改，只能删除重建)
+
+1. 容器名是唯一的，不能重复。
+2. 原本容器有的参数 不行覆盖就可以不用配置，容器会使用镜像默认的。
+
+```shell
+# docker run -d -p 宿主机端口:容器内部端口 --name 容器名 镜像名:镜像版本(默认是 latest)
+# -d: 以后台进程运行 (没有后台进程运行的容器，启动后会 关机(停止))
+# -it：启动后进入 bash 终端 (以交互方式创建容器)(一般不用)
+
+$ docker run -d -p 8081:8080 --name tomcat-1 tomcat
+```
+
+文件拷贝 (一般不推荐)
+
+```shell
+# 从外部 拷贝到 容器 (需要确保容器内的目录存在，比如下面的要先进入容器内 创建 ROOT 目录。) (访问 http://localhost:8081 可以看到该文件)
+# docker cp 需要拷贝的文件或目录 容器名称:容器目录
+$ docker cp /Users/sky/Desktop/study_github/study_docker/copy_demo/demo1/index.html tomcat-1:/usr/local/tomcat/webapps/ROOT
+
+# 拷贝一个图片到 容器内 (访问 http://localhost:8081/WX20250705-120315@2x.png)
+$ docker cp /Users/sky/Desktop/study_github/study_docker/copy_demo/demo1/WX20250705-120315@2x.png tomcat-1:/usr/local/tomcat/webapps/ROOT
+
+# 从容器内 拷贝到 外部(宿主机)
+# docker cp 容器名称:容器目录 需要拷贝的文件或目录
+
+$ docker cp tomcat-1:/usr/local/tomcat/webapps/ROOT/index.html /Users/sky/Desktop/study_github/study_docker/copy_demo/demo2
+
+$ docker cp tomcat-1:/usr/local/tomcat/webapps/ROOT /Users/sky/Desktop/study_github/study_docker/copy_demo/demo3
+```
+
+启动容器时 加入网段
+
+```shell
+# 加入同一网段
+# --network nginx-tomcat-net-1
+
+$ docker run -d --name tomcat-2 -p 8082:8080 --network nginx-tomcat-net-1 tomcat
+```
+
+创建数据卷 (数据卷：内部外部都可以修改) (推荐方式，因为 宿主机中就可以操作容器中的目录)
+
+```shell
+# -v 宿主机目录地址:容器内目录地址
+
+$ docker run -d --name tomcat-2 -p 8082:8080 -v /Users/sky/Desktop/study_github/study_docker/volume_demo/demo1:/usr/local/tomcat/webapps/ROOT tomcat
+```
 
 
 
