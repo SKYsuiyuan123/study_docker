@@ -1,5 +1,13 @@
 ## Docker 镜像和容器
 
+当容器启动时，一个新的可写层被加载到镜像的顶部。这一层通常被称为 “容器层”，“容器层”之下的都叫“镜像层”。
+
+
+
+Mysql Redis 等存储数据类应用，不推荐使用 Docker。
+
+
+
 新版本标准命令，遵循 Docker 分组语法: `docker 资源类型 操作`
 
 ### 镜像相关命令
@@ -81,6 +89,15 @@ $ docker ps -a
 
 # 查看 所有容器的 容器ID
 $ docker ps -qa
+
+# 查看最后启动的一个容器
+$ docker ps -l
+
+# 查看最近创建的 n 个容器
+$ docker ps -n 5
+
+# 查看命令帮助
+docker ps --help
 ```
 
 停止容器
@@ -153,8 +170,12 @@ $ docker logs --tail=5 tomcat-1
 ```shell
 # docker inspect 容器名称/容器ID
 # 在返回数据里 查找 NetworkSettings.IPAddress
+# 也可以查看 容器的 详细信息，比如查看挂载卷：Mounts.Source
 
 $ docker inspect tomcat-1
+
+# 直接输出 ip 地址 172.17.0.2
+$ docker inspect --format='{{.NetworkSettings.IPAddress}}' tomcat-1
 ```
 
 ### 创建容器
@@ -281,7 +302,7 @@ $ docker volume ls
 # 查看 dangling(未被容器引用的)匿名卷 即：悬空卷
 $ docker volume ls -f dangling=true
 
-# 查看数据卷详细信息
+# 查看数据卷详细信息 (可以查看 数据卷的地址，创建时间。)
 # docker volume inspect 数据卷名称
 
 $ docker volume inspect tomcat-volume-1
@@ -301,18 +322,31 @@ $ docker volume prune
 $ docker volume prune -f
 ```
 
-应用数据卷
+应用数据卷 (挂载数据卷)
 
 ```shell
-# 1. 当你映射数据卷时，如果数据卷不存在，Docker 会帮你自动创建。(会将容器内部自带的文件存储在默认的存放路径中)
+# 1. 具名挂载：当你映射数据卷时，如果数据卷不存在，Docker 会帮你自动创建。(会将容器内部自带的文件存储在默认的存放路径中) (Mounts.Name: tomcat-volume-1)
 # docker run -v 数据卷名称:容器内部的路径 镜像ID
 
 $ docker run --name tomcat-1 -p 8081:8080 -d -v tomcat-volume-1:/usr/local/tomcat/webapps/ROOT tomcat
 
-# 2. 直接指定一个路径作为数据卷的存放位置。(路径里边的文件内容需要自己创建) (常用)
+# 匿名挂载：只指定 容器目录，Docker 会帮你自动创建。(会将容器内部自带的文件存储在默认的存放路径中 /var/lib/docker/volumes/8b3ac6b427613ce1954a427aeea8052cfaf928e625dcabe236fce1380c325995/_data) (Mounts.Name: 8b3ac6b427613ce1954a427aeea8052cfaf928e625dcabe236fce1380c325995)
+$ docker run --name tomcat-3 -p 8083:8080 -d -v /usr/local/tomcat/webapps/ROOT tomcat
+
+# 2. 指定目录挂载：直接指定一个路径作为数据卷的存放位置。(宿主机路径里边的文件内容需要自己创建) (常用) (Mounts.Source: /Users/sky/Desktop/study_github/study_docker/volume_demo/demo2)
 # docker run -v 路径:容器内部的路径 镜像ID
 
 $ docker run -d --name tomcat-2 -p 8082:8080 -v /Users/sky/Desktop/study_github/study_docker/volume_demo/demo2:/usr/local/tomcat/webapps/ROOT tomcat
+
+# :ro 只读模式。只允许 容器内进行读取，不允许写入。
+# :rw 读写模式。
+$ docker run -d --name tomcat-4 -p 8084:8080 -v /Users/sky/Desktop/study_github/study_docker/volume_demo/demo2:/usr/local/tomcat/webapps/ROOT:ro tomcat
+
+# 3. 继承数据卷
+$ docker run -d --name tomcat-5 -p 8085:8080 --volumes-from tomcat-2 tomcat
+
+# :ro 只读模式。
+$ docker run -d --name tomcat-6 -p 8086:8080 --volumes-from tomcat-2:ro tomcat
 ```
 
 
