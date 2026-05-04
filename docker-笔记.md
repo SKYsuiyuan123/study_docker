@@ -69,6 +69,54 @@ $ docker load -i /Users/sky/Desktop/study_github/study_docker/backup_images_demo
 $ docker tag tomcat tomcat:latest-v1
 ```
 
+### 搭建私有镜像仓库
+
+搭建步骤
+
+```shell
+# 1. 拉取私有仓库镜像
+$ docker pull registry
+
+# 2. 启动私有仓库容器 (5000 端口是被占用的)
+$ docker run -d --name registry-test-1 -p 5001:5000 registry
+
+# 3. 打开浏览器输入地址 http://127.0.0.1:5001/v2/_catalog 看到 {"repositories": []} 表示私有仓库搭建成功并且内容为空
+
+# 4. 修改 daemon.json (本地可以使用 docker destop 修改里边的 Docker Engine)
+$ vi /etc/docker/daemon.json
+# 添加以下内容，保存并退出。(私服地址:端口)
+# {"insecure-registries": ["127.0.0.1:5001"]}
+# 这步是用于让 docker 信任私有仓库地址
+
+# 5. 重启 docker 服务
+$ restart docker
+
+# 6. 开启 私有仓库容器
+$ docker start registry-test-1
+```
+
+### 镜像上传到私有仓库
+
+操作步骤
+
+```shell
+# 1. 标记此镜像为私有仓库的镜像
+# docker tag 镜像名 127.0.0.1:5001/标签名
+
+$ docker tag tomcat 127.0.0.1:5001/test-tomcat-image-1.0.1
+
+# 2. 上传标记的仓库
+$ docker push 127.0.0.1:5001/test-tomcat-image-1.0.1
+
+# 3. 打开浏览器输入地址 http://127.0.0.1:5001/v2/_catalog 验证 {"repositories": ["test-tomcat-image-1.0.1"]} 表示 已上传成功
+
+# 4. 其它电脑拉取
+# 	a. 配置 docker 信任私有仓库地址
+#		b. docker pull 镜像名 拉取镜像
+
+$ docker pull 127.0.0.1:5001/test-tomcat-image-1.0.1
+```
+
 ### 容器相关命令（不包含 创建容器）
 
 列出容器
