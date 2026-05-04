@@ -349,6 +349,35 @@ $ docker run -d --name tomcat-5 -p 8085:8080 --volumes-from tomcat-2 tomcat
 $ docker run -d --name tomcat-6 -p 8086:8080 --volumes-from tomcat-2:ro tomcat
 ```
 
+### 备份和迁移
+
+将容器保存为镜像
+
+```shell
+# docker commit 容器名 镜像名
+$ docker commit tomcat-1 test-tomcat-i
+
+# 查看刚刚保存的镜像
+$ docker images;
+
+# 基于新的镜像 创建新的容器
+$ docker run --name test-tomcat-1 -d -p 8090:8080 test-tomcat-i
+```
+
+镜像备份
+
+```shell
+# test-tomcat-i: 要备份的镜像名
+# test-tomcat-i.tar: 备份之后的文件名
+
+$ docker save -o /Users/sky/Desktop/study_github/study_docker/backup_images_demo/test-tomcat-i.tar test-tomcat-i
+```
+
+镜像恢复和迁移
+
+```shell
+$ docker load -i /Users/sky/Desktop/study_github/study_docker/backup_images_demo/test-tomcat-i.tar
+```
 
 
 ## 自定义镜像
