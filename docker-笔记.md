@@ -593,7 +593,56 @@ $ docker run -d -p 8100:8080 --name demo-tomcat-3-1 demo-tomcat-3:1.0
 
 ### Docker-Compose
 
+可以通过 Docker-compose 批量编写参数，可以批量的管理容器。
 
+只需要创建一个 docker-compose.yml 文件去维护即可。
+
+以下命令需要在 当前 docker-compose.yml 文件夹下执行
+
+**一旦修改了 docker-compose.yml** 文件内容需要 stop 停止服务，然后 down 删除服务，重新 执行 **docker-compose up -d** 命令
+
+```shell
+# 1. 上线 (启动) docker-compose 里的服务 (默认会在当前目录下寻找 docker-compose.yml)
+# -d: 以 后台进程 上线
+
+$ docker-compose up -d
+
+# docker-compose up -d 文件名.后缀名
+
+# 或者 文件不是 docker-compose.yml 需要使用 -f 指定 文件名
+
+$ docker-compose -f docker-compose-2.yml up -d
+
+$ docker-compose -f docker-compose-2.yml stop
+
+$ docker-compose -f docker-compose-2.ym down
+
+# 2. 停止容器 里的所有服务
+$ docker-compose stop
+
+# 3. 删除容器 里的所有服务
+$ docker-compose down
+
+# 4. 启动由 docker-compose 维护的容器
+$ docker-compose start
+
+$ docker-compose restart
+
+# 5. 查看 docker-compose 管理的容器
+$ docker-compose ps
+
+# 6. 查看 docker-compose 日志
+$ docker-compose logs -f
+
+# 例子：compose_demo
+```
+
+如何支持 12306 网站服务的 闲忙不均问题？
+
+答：可以编写多个 docker-compose.yml 文件。A 文件支持春节，B 文件支持平时。
+
+
+---
 
 
 

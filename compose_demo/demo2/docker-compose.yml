@@ -1,0 +1,20 @@
+services:
+
+  mysql: # 服务的名称
+    restart: always # always 代表只要 docker 启动，那么这个容器就跟着一起启动。
+    image: mysql # 指定所使用的镜像
+    container_name: test-docker-compose-mysql-1 # 指定容器运行名称
+    ports:
+      - 3390:3306 # 指定端口号的映射
+    environment:
+      - MYSQL_ROOT_PASSWORD=root # 指定 mysql 的 root 用户登陆密码
+      - TZ=Asia/Shanghai # 指定时区
+    volumes:
+      - /Users/sky/Desktop/study_github/study_docker/compose_demo/demo2/db:/var/lib/mysql # 映射数据卷、
+  
+  node:
+    restart: always
+    image: express-dockerfile-demo-1:1.0.1
+    container_name: test-docker-compose-demo2-node-1
+    ports:
+      - 3030:3002
