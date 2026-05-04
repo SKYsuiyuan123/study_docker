@@ -484,6 +484,8 @@ $ docker cp /Users/sky/Desktop/docker-demo/usr/local/nginx/html test-nginx-1:/us
 部署 Nginx 代理集群
 
 ```shell
+# 例子: nginx_demo/demo2
+
 # 1. 先启动一个 Nginx 服务, 要把 这两个文件 copy 下来。
 $ docker cp nginx-test-1:/etc/nginx/nginx.conf /Users/sky/Desktop/study_github/study_docker/nginx_demo/demo2/usr/local/nginx/conf/
 $ docker cp nginx-test-1:/etc/nginx/conf.d /Users/sky/Desktop/study_github/study_docker/nginx_demo/demo2/usr/local/nginx/conf/
@@ -528,6 +530,80 @@ $ docker restart nginx-test-2
 
 
 ## 自定义镜像
+
+使用 Dockerfile 文件，并且指定 自定义镜像信息。
+
+### Dockerfile
+
+基础镜像原本有的参数，不想覆盖就不用配置，会使用基础镜像默认的。
+
+**DockerFile 里的常用内容**
+
+**FROM:** 指定当前自定义镜像依赖的环境
+
+**COPY:** 将相对路径下的内容 复制到 自定义镜像中
+
+**WORKDIR:** 声明镜像的默认工作目录
+
+**ADD:**
+
+**CMD:** 需要执行的命令 (在 WORKDIR 下执行的，CMD 可以写多个，但是只以最后一个为准。)
+
+**RUN:**
+
+**ENV:**
+
+**MAINTAINER:**
+
+**EXPOSE:**
+
+```shell
+# FROM image_name: tag 定义了使用哪个基础镜像启动构建流程
+# MAINTAINER user_name 声明镜像的创建者
+# ENV key value 设置环境变量 (可以写多条)
+# RUN command 是 Dockerfile 的核心部分 (可以写多条)
+# ADD source_dir/file dest_dir/file 将宿主机的文件复制到容器内，如果是一个压缩文件，将会在复制后自动解压。(ADD 源的文件夹/文件 目标的文件夹/文件)
+# COPY source_dir/file dest_dir/file 和 ADD 相似，但是如果有压缩文件并不能解压 (COPY 源的文件夹/文件 目标的文件夹/文件)
+# WORKDIR path_dir 设置工作目录
+# EXPOSE 3000 向外暴露端口
+# CMD ["npm", "run", "start"] 指定容器启动后要做的事情
+
+# RUN git clone https://github.com/xxx 可以从 git 上拉取代码
+```
+
+构建镜像命令
+
+```shell
+# docker build -t 镜像名:版本tag .
+# . 代表当前目录下 有 Dockerfile 文件
+# 1.0 镜像的版本号
+
+$ docker build -t demo-tomcat .
+
+$ docker build -t demo-tomcat-3:1.0
+
+$ docker run -d -p 8100:8080 --name demo-tomcat-3-1 demo-tomcat-3:1.0
+
+# 如果再次运行 docker build -t demo-tomcat . 就会产生一个虚悬镜像
+
+# 例子: dockerfile_demo
+```
+
+
+
+### Docker-Compose
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
