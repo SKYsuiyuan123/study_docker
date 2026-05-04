@@ -105,6 +105,9 @@ $ docker start registry-test-1
 
 $ docker tag tomcat 127.0.0.1:5001/test-tomcat-image-1.0.1
 
+# 查看 刚刚 commit 过的镜像，镜像名：127.0.0.1:5001/test-tomcat-image-1.0.1
+$ docker images;
+
 # 2. 上传标记的仓库
 $ docker push 127.0.0.1:5001/test-tomcat-image-1.0.1
 
