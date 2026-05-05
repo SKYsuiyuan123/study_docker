@@ -642,6 +642,58 @@ $ docker-compose logs -f
 答：可以编写多个 docker-compose.yml 文件。A 文件支持春节，B 文件支持平时。
 
 
+
+### Dockerfile 配合 docker-compose 一起使用
+
+使用 **docker-compose.yml** 文件 以及 **Dockerfile** 文件在生成自定义镜像的同时 启动当前镜像，并且由 docker-compose 去管理容器。
+
+
+
+```shell
+$ docker-compose up -d
+# 注意：该命令在 自定义镜像不存在时，会帮助我们构建出自定义镜像，但是如果这个自定义镜像已经存在，则会直接运行这个自定义镜像。
+# 如果只是 docker-compose.yml 里边的环境变量更改，则无需 重新构建镜像，只需重启即可。
+
+# 如果要重新构建镜像，需要使用
+$ docker-compose build
+
+# 运行前，重新构建镜像
+$ docker-compose up -d --build
+```
+
+**Dockerfile** 和 **docker-compose.yml** 编写时 要注意的点
+
+```shell
+# SERVER_PORT=3003 是给你的 Node 代码用的配置，属于环境变量 -> 必须放在 docker-compose.yml 里，不要写死在 Dockerfile 中！
+
+# 一：先搞懂 3个端口 的区别
+# 	1. SERVER_PORT=3003
+#			作用：你的 Node 代码自己监听的端口 (代码里读这个变量)
+#			归属：环境变量 -> 放 docker-compose.yml
+#		2. ports: - 3330:3003
+#			作用：电脑端口 -> 映射到 -> 容器内部端口
+#			归属：docker-compose.yml
+#		3. Dockerfile 里的 EXPOSE
+#			没用，不用写。
+
+#	二：为什么不能放 Dockerfile
+#		1. 写死不灵活。开发、测试、生产环境想换端口，必须重新构建镜像。
+#		2. 违反 Docker 最佳实践。环境变量、配置 -> 都属于运行时，不属于构建时。
+#		3. Dockerfile 只负责打包程序，不负责运行配置。
+
+# 配置项									放哪里
+#	时区 TZ								 docker-compose.yml
+#	服务端口 SERVER_PORT	 docker-compose.yml
+#	端口映射 3330:3003		 docker-compose.yml
+#	数据库密码							docker-compose.yml
+
+# Dockerfile 只打包代码，不写运行时配置。
+
+# 例子：dockerfile-docker_compose_demo
+```
+
+
+
 ---
 
 

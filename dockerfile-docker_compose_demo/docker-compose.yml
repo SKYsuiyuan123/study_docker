@@ -1,0 +1,17 @@
+services:
+
+  node:
+    restart: always
+    build: 
+      context: . # 指定 Dockerfile 文件所在路径
+      dockerfile: Dockerfile # 指定 Dockerfile 文件名称
+    image: dockerfile-docker_compose_demo:1.0.0
+    container_name: test-dockerfile-docker_compose_demo-1
+    stop_grace_period: 30s # 优雅等待 30秒 停止
+    stop_signal: SIGTERM  # 发送优雅停止信号
+    environment:
+      - SERVER_PORT=3000
+      - TZ=Asia/Shanghai
+      - NODE_ENV=production
+    ports:
+      - 3330:3000
