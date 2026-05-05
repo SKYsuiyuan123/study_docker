@@ -80,6 +80,9 @@ $ docker pull registry
 # 2. 启动私有仓库容器 (5000 端口是被占用的)
 $ docker run -d --name registry-test-1 -p 5001:5000 registry
 
+# -v 添加数据卷挂载
+$ docker run -d --name registry-test-2 -p 5002:5000 -v /Users/sky/Desktop/study_github/study_docker/registry_demo/:/var/lib/registry registry
+
 # 3. 打开浏览器输入地址 http://127.0.0.1:5001/v2/_catalog 看到 {"repositories": []} 表示私有仓库搭建成功并且内容为空
 
 # 4. 修改 daemon.json (本地可以使用 docker destop 修改里边的 Docker Engine)
@@ -101,9 +104,11 @@ $ docker start registry-test-1
 
 ```shell
 # 1. 标记此镜像为私有仓库的镜像
-# docker tag 镜像名 127.0.0.1:5001/标签名
+# docker tag 镜像名 127.0.0.1:5001/标签名:Tag
 
 $ docker tag tomcat 127.0.0.1:5001/test-tomcat-image-1.0.1
+
+$ docker tag tomcat 127.0.0.1:5001/test-tomcat-image-1.0.1:1.0.1
 
 # 查看 刚刚 commit 过的镜像，镜像名：127.0.0.1:5001/test-tomcat-image-1.0.1
 $ docker images;
@@ -119,6 +124,10 @@ $ docker push 127.0.0.1:5001/test-tomcat-image-1.0.1
 
 $ docker pull 127.0.0.1:5001/test-tomcat-image-1.0.1
 ```
+
+### 私有仓库  添加安全认证
+
+需要生成安全证书，防止别人随意提交 和 删除。
 
 ### 容器相关命令（不包含 创建容器）
 
@@ -233,6 +242,8 @@ $ docker inspect --format='{{.NetworkSettings.IPAddress}}' tomcat-1
 
 每一个容器，它都有自己的文件系统 rootfs
 
+容器必须有前台任务在执行，不然容器会直接退出。(比如直接：**docker run node**)
+
 
 
 **创建并运行容器** (容器一旦创建，端口、名字、后台运行模式 都不能修改，只能删除重建)
@@ -243,7 +254,8 @@ $ docker inspect --format='{{.NetworkSettings.IPAddress}}' tomcat-1
 ```shell
 # docker run -d -p 宿主机端口:容器内部端口 --name 容器名 镜像名:镜像版本(默认是 latest)
 # -d: 以后台进程运行 (没有后台进程运行的容器，启动后会 关机(停止))
-# -it：启动后进入 bash 终端 (以交互方式创建容器)(一般不用)
+# -it: 启动后进入 bash 终端 (以交互方式创建容器)(一般不用)
+# --network: 指定网络模式,默认 bridge 模式，可以指定 网络模式。
 
 $ docker run -d -p 8081:8080 --name tomcat-1 tomcat
 ```
@@ -408,6 +420,11 @@ $ docker run -d --name tomcat-6 -p 8086:8080 --volumes-from tomcat-2:ro tomcat
 # docker commit 容器名 镜像名
 $ docker commit tomcat-1 test-tomcat-i
 
+# 基于 tomcat-1 这个容器，构建一个 test-tomcat-i 的镜像
+# -a: 作者
+# -m: commit 信息
+$ docker commit -a="sky" -m='test tomcat demo1' tomcat-1 test-tomcat-i
+
 # 查看刚刚保存的镜像
 $ docker images;
 
@@ -566,6 +583,7 @@ $ docker restart nginx-test-2
 # COPY source_dir/file dest_dir/file 和 ADD 相似，但是如果有压缩文件并不能解压 (COPY 源的文件夹/文件 目标的文件夹/文件)
 # WORKDIR path_dir 设置工作目录
 # EXPOSE 3000 向外暴露端口
+# VOLUME source_dir/file 设置数据卷 (一般用不到)
 # CMD ["npm", "run", "start"] 指定容器启动后要做的事情
 
 # RUN git clone https://github.com/xxx 可以从 git 上拉取代码
@@ -575,8 +593,15 @@ $ docker restart nginx-test-2
 
 ```shell
 # docker build -t 镜像名:版本tag .
-# . 代表当前目录下 有 Dockerfile 文件
-# 1.0 镜像的版本号
+# .: ADD/COPY 要添加的资源位置 . 代表当前目录。告诉 Docker 去哪里找 Dockerfile 和构建所需的所有文件。
+# tag: 镜像的版本号 (比如 1.0.0)
+# -f: Dockerfile文件路径，默认当前目录下。
+
+# . 终极总结（最关键）
+# 	1. .= 给 Docker 提供 “文件来源”
+#		2. ADD = 从这个来源里复制文件到镜像里
+#		3. ADD 能访问的文件，必须在 . 目录里面
+#		4. ADD 里 绝对路径、上级目录（../）都不能用
 
 $ docker build -t demo-tomcat .
 
