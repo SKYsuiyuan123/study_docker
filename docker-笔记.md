@@ -692,6 +692,75 @@ $ docker-compose up -d --build
 # 例子：dockerfile-docker_compose_demo
 ```
 
+### 多阶段构建镜像（例如：前端发布）
+
+前端 + nginx 模板
+
+```shell
+# 第一阶段
+
+# FROM node # 或者 AD basic
+# COPY ./ /app
+# WORKDIR /app
+# RUN npm install && npm run build
+
+# 第二阶段
+
+# FROM nginx
+# RUN mkdir /app
+# COPY --from=0 /app/dist /app # from=0 表示从第一个基底对象拷贝内容
+# 或者 COPY basic:/app/dist /app
+# COPY nginx.conf /etc/nginx/nginx.conf
+
+# nginx.conf 内容如下：
+
+// user  nginx;
+// worker_processes  auto;
+
+// error_log  /var/log/nginx/error.log notice;
+// pid        /run/nginx.pid;
+
+
+// events {
+//     worker_connections  1024;
+// }
+
+
+// http {
+//     include       /etc/nginx/mime.types;
+//     default_type  application/octet-stream;
+
+//     log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+//                       '$status $body_bytes_sent "$http_referer" '
+//                       '"$http_user_agent" "$http_x_forwarded_for"';
+
+//     access_log  /var/log/nginx/access.log  main;
+
+//     sendfile        on;
+//     #tcp_nopush     on;
+
+//     keepalive_timeout  65;
+
+//     server {
+//       listen       80;
+//       server_name  localhost;
+
+//       location / {
+//         root  /app;
+//         index index.html;
+//         try_files $uri $uri/ /index.html;
+//       }
+
+//       error_page 500 502 503 504 /50x.html;
+//       location = /50x.html {
+//         root /usr/share/nginx/html;
+//       }
+//     }
+
+//     #gzip  on;
+// }
+```
+
 
 
 ---
