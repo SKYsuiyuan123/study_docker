@@ -1,0 +1,42 @@
+services:
+
+  mysql: # 服务的名称
+    restart: always # always 代表只要 docker 启动，那么这个容器就跟着一起启动。
+    image: mysql # 指定所使用的镜像
+    container_name: test-docker-compose-mysql-2 # 指定容器运行名称
+    ports:
+      - 3391:3306 # 指定端口号的映射
+    environment:
+      - MYSQL_ROOT_PASSWORD=root # 指定 mysql 的 root 用户登陆密码
+      - TZ=Asia/Shanghai # 指定时区
+    volumes:
+      - /Users/sky/Desktop/study_github/study_docker/compose_demo/demo3/db:/var/lib/mysql # 映射数据卷
+    networks: # 加入自定义网络
+      - mysql-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+
+  node:
+    restart: always
+    image: express-dockerfile-demo-1:1.0.1
+    container_name: test-docker-compose-demo2-node-2
+    ports:
+      - 3031:3002
+    environment:
+      - TZ=Asia/Shanghai  # 统一时区
+    networks: # 加入同一个网络
+      - mysql-net
+    depends_on: # 依赖顺序 + 等待 Mysql 健康检查
+      mysql:
+        condition: service_healthy
+
+# 定义网络，可以多个，如果不声明，默认会创建一个 网络名称为 “工程名称_default” 的 bridge 的网络。
+networks:
+  mysql-net:  # 一个具体网络的条目名称
+    name: mysql-net # 网络名称，默认为 “工程名称_网络条目名称”
+    driver: bridge  # 网络模式，默认为 bridge 模式
