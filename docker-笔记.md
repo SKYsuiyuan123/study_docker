@@ -1,14 +1,20 @@
 ## Docker 镜像和容器
 
 当容器启动时，一个新的可写层被加载到镜像的顶部。这一层通常被称为 “容器层”，“容器层”之下的都叫“镜像层”。
+镜像层都是只读的，容器层是可写的。
+UnionFS (联合文件系统) 是 Docker 镜像的基础。镜像可以通过分层来进行集成，基于基础镜像，可以制作各种具体的应用镜像。
 
 
-
-Mysql Redis 等存储数据类应用，不推荐使用 Docker。
+Mysql Redis 等存储数据类应用，不推荐使用 Docker。如果要使用，必须挂载数据卷。
 
 
 
 新版本标准命令，遵循 Docker 分组语法: `docker 资源类型 操作`
+
+```shell
+# 查看 docker 装的信息
+$ docker system df
+```
 
 ### 镜像相关命令
 
@@ -27,6 +33,9 @@ $ docker pull daoclound.io/library/tomcat:8
 ```shell
 # docker rmi 镜像名/镜像id
 $ docker rmi tomcat
+
+# 一次 删除多个
+$ docker rmi tomcat nginx node
 
 # docker rmi 镜像名/镜像id:TAG(版本号)
 $ docker rmi tomcat:latest
@@ -53,6 +62,7 @@ $ docker images -f dangling=true
 ```shell
 # 导出
 
+# ave 存镜像（完整、带历史）所有镜像层、元数据、构建历史、标签
 # docker save -o 导出的路径 镜像id/镜像名
 $ docker save -o /Users/sky/Desktop/study_github/study_docker/backup_images_demo/test-tomcat-i.tar tomcat
 
@@ -60,6 +70,10 @@ $ docker save -o /Users/sky/Desktop/study_github/study_docker/backup_images_demo
 
 # docker load -i 镜像文件
 $ docker load -i /Users/sky/Desktop/study_github/study_docker/backup_images_demo/test-tomcat-i.tar
+
+# export 存容器快照（仅文件系统、无历史）容器当前文件系统快照（无历史、无元数据）
+# docker export 镜像ID > abc.tar
+
 ```
 
 修改镜像名称
@@ -202,6 +216,9 @@ $ docker restart tomcat-1
 # docker rm 容器名/容器ID
 $ docker rm tomcat-1
 
+# 一次 删除多个
+$ docker rm tomcat-1 tomcat-2 tomcat-3
+
 # 删除所有容器
 $ docker rm $(docker ps -qa)
 ```
@@ -211,6 +228,19 @@ $ docker rm $(docker ps -qa)
 ```shell
 # docker exec -it 容器名/容器ID bash
 $ docker exec -it tomcat-1 bash
+
+# or
+
+$ docker exec -it tomcat-1 /bin/bash
+
+# docker attach 容器ID
+$ docker attach tomcat-1
+
+# 区别
+#		attach 直接进入容器启动命令的终端，不会启动新的进程，用 exit 退出，会导致容器的停止。
+#		exec 是在容器中打开新的终端，并且可以启动新的进行，用 exit 退出，不会导致容器的停止。
+
+# 推荐使用 docker exec 命令。
 ```
 
 查看容器日志 (实时日志，退出使用 control + c)
@@ -256,6 +286,7 @@ $ docker inspect --format='{{.NetworkSettings.IPAddress}}' tomcat-1
 # -d: 以后台进程运行 (没有后台进程运行的容器，启动后会 关机(停止))
 # -it: 启动后进入 bash 终端 (以交互方式创建容器)(一般不用)
 # --network: 指定网络模式,默认 bridge 模式，可以指定 网络模式。
+# -P: 随机指定端口。(一般不用)
 
 $ docker run -d -p 8081:8080 --name tomcat-1 tomcat
 ```
@@ -350,6 +381,8 @@ Compose 会**自动创建一个专属网桥** (自定义 bridge 类型)名字一
 
 ### Docker volume 命令
 
+服务停止(容器 stop)后 挂载的数据卷 不会丢失，当服务重启(容器 start)后，仍然可以读取到 数据卷的内容。
+
 创建 volume
 
 ```shell
@@ -390,22 +423,28 @@ $ docker volume prune -f
 ```shell
 # 1. 具名挂载：当你映射数据卷时，如果数据卷不存在，Docker 会帮你自动创建。(会将容器内部自带的文件存储在默认的存放路径中) (Mounts.Name: tomcat-volume-1)
 # docker run -v 数据卷名称:容器内部的路径 镜像ID
+# --privileged=true 防止目录没有权限
+# 也叫 卷挂载
 
 $ docker run --name tomcat-1 -p 8081:8080 -d -v tomcat-volume-1:/usr/local/tomcat/webapps/ROOT tomcat
 
 # 匿名挂载：只指定 容器目录，Docker 会帮你自动创建。(会将容器内部自带的文件存储在默认的存放路径中 /var/lib/docker/volumes/8b3ac6b427613ce1954a427aeea8052cfaf928e625dcabe236fce1380c325995/_data) (Mounts.Name: 8b3ac6b427613ce1954a427aeea8052cfaf928e625dcabe236fce1380c325995)
+# 也叫 临时挂载，容器停止，挂载数据也会被删除。
+
 $ docker run --name tomcat-3 -p 8083:8080 -d -v /usr/local/tomcat/webapps/ROOT tomcat
 
-# 2. 指定目录挂载：直接指定一个路径作为数据卷的存放位置。(宿主机路径里边的文件内容需要自己创建) (常用) (Mounts.Source: /Users/sky/Desktop/study_github/study_docker/volume_demo/demo2)
+# 2. 指定目录挂载：直接指定一个路径作为数据卷的存放位置。(宿主机路径里边的文件内容需要自己创建，或者创建容器时会自动创建(需要有权限)) (常用) (Mounts.Source: /Users/sky/Desktop/study_github/study_docker/volume_demo/demo2)
+# 也叫 绑定挂载
 # docker run -v 路径:容器内部的路径 镜像ID
 
 $ docker run -d --name tomcat-2 -p 8082:8080 -v /Users/sky/Desktop/study_github/study_docker/volume_demo/demo2:/usr/local/tomcat/webapps/ROOT tomcat
 
 # :ro 只读模式。只允许 容器内进行读取，不允许写入。
-# :rw 读写模式。
+# :rw 读写模式。(默认)
 $ docker run -d --name tomcat-4 -p 8084:8080 -v /Users/sky/Desktop/study_github/study_docker/volume_demo/demo2:/usr/local/tomcat/webapps/ROOT:ro tomcat
 
-# 3. 继承数据卷
+# 3. 继承数据卷 (类似于共享机制)
+# 父容器 挂了之后，数据卷依然会存在。父容器恢复后 依然可以读取数据卷里 新添加的内容。
 $ docker run -d --name tomcat-5 -p 8085:8080 --volumes-from tomcat-2 tomcat
 
 # :ro 只读模式。
@@ -423,13 +462,13 @@ $ docker commit tomcat-1 test-tomcat-i
 # 基于 tomcat-1 这个容器，构建一个 test-tomcat-i 的镜像
 # -a: 作者
 # -m: commit 信息
-$ docker commit -a="sky" -m='test tomcat demo1' tomcat-1 test-tomcat-i
+$ docker commit -a="sky" -m='test tomcat demo1' tomcat-1 test-tomcat-i:1.0.0
 
 # 查看刚刚保存的镜像
 $ docker images;
 
 # 基于新的镜像 创建新的容器
-$ docker run --name test-tomcat-1 -d -p 8090:8080 test-tomcat-i
+$ docker run --name test-tomcat-1 -d -p 8090:8080 test-tomcat-i:1.0.0
 ```
 
 镜像备份
@@ -570,13 +609,15 @@ $ docker restart nginx-test-2
 
 **ENV:**
 
-**MAINTAINER:**
+**LABEL:**
 
 **EXPOSE:**
 
+**ENTRYPOINT** 与 CMD 二选一。如果镜像中 ENTRYPOINT 和 CMD 都存在，则 CMD 将作为 ENTRYPOINT 的参数使用。
+
 ```shell
 # FROM image_name: tag 定义了使用哪个基础镜像启动构建流程
-# MAINTAINER user_name 声明镜像的创建者
+# LABEL author=user_name 声明镜像的创建者
 # ENV key value 设置环境变量 (可以写多条)
 # RUN command 是 Dockerfile 的核心部分 (可以写多条)
 # ADD source_dir/file dest_dir/file 将宿主机的文件复制到容器内，如果是一个压缩文件，将会在复制后自动解压。(ADD 源的文件夹/文件 目标的文件夹/文件)
@@ -584,7 +625,8 @@ $ docker restart nginx-test-2
 # WORKDIR path_dir 设置工作目录
 # EXPOSE 3000 向外暴露端口
 # VOLUME source_dir/file 设置数据卷 (一般用不到)
-# CMD ["npm", "run", "start"] 指定容器启动后要做的事情
+# CMD ["npm", "run", "start"] 指定容器启动后要做的事情。可以在启动容器时被替换和覆盖。
+# ENTRYPOINT 指定容器启动时执行的默认程序，一般运行容器时不会被替换或覆盖。除非使用 --entrypoint 进行指定。
 
 # RUN git clone https://github.com/xxx 可以从 git 上拉取代码
 ```
@@ -644,12 +686,14 @@ $ docker-compose -f docker-compose-2.ym down
 
 # 2. 停止容器 里的所有服务
 $ docker-compose stop
+$ docker-compose stop node
 
 # 3. 删除容器 里的所有服务
 $ docker-compose down
 
 # 4. 启动由 docker-compose 维护的容器
 $ docker-compose start
+$ docker-compose start node mysql
 
 $ docker-compose restart
 
@@ -658,6 +702,9 @@ $ docker-compose ps
 
 # 6. 查看 docker-compose 日志
 $ docker-compose logs -f
+
+# 7. 执行扩容操作
+$ docker compose scale node=3
 
 # 例子：compose_demo
 ```
@@ -724,7 +771,7 @@ $ docker-compose up -d --build
 ```shell
 # 第一阶段
 
-# FROM node # 或者 AD basic
+# FROM node # 或者 AD basic 或者 FROM node as build
 # COPY ./ /app
 # WORKDIR /app
 # RUN npm install && npm run build
@@ -735,6 +782,7 @@ $ docker-compose up -d --build
 # RUN mkdir /app
 # COPY --from=0 /app/dist /app # from=0 表示从第一个基底对象拷贝内容
 # 或者 COPY basic:/app/dist /app
+# 或者 COPY --from=build /app/dist /app
 # COPY nginx.conf /etc/nginx/nginx.conf
 
 # nginx.conf 内容如下：

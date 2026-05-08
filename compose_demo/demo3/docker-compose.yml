@@ -33,10 +33,13 @@ services:
       - mysql-net
     depends_on: # 依赖顺序 + 等待 Mysql 健康检查
       mysql:
-        condition: service_healthy
+        condition: service_healthy # 这里由三个参数，分别是：service_started (容器已启动), service_healthy (容器处于健康检查状态), service_completed_successfully (容器执行完成且成功退出)
 
 # 定义网络，可以多个，如果不声明，默认会创建一个 网络名称为 “工程名称_default” 的 bridge 的网络。
 networks:
   mysql-net:  # 一个具体网络的条目名称
     name: mysql-net # 网络名称，默认为 “工程名称_网络条目名称”
     driver: bridge  # 网络模式，默认为 bridge 模式
+
+volumes:
+  mysql-node-test-data: # 这里会自动创建数据卷
